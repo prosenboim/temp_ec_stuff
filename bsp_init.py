@@ -29,11 +29,16 @@ def new_i2c_devices(new_device_list):
         new_i2c_device(driver, addr, bus_number)
 
 def insmod(module: str) -> bool:
-    subprocess.check_call(f"insmod {module}")
+    module_name = module.split('.')[0].replace("-", "_")
+    retcode, _ = subprocess.getstatusoutput(f"lsmod | grep {module_name}")
+    if retcode == 0:
+        subprocess.check_call(f"rmmod {module_name}", shell=True)
+
+    subprocess.check_call(f"insmod {module}", shell=True)
     return True
 
 def baseconfig():
-    insmod('optoe')
+    insmod('optoe.ko')
     for m in [ 'cpld', 'fan', 'psu', 'leds', 'thermal', 'sys' ]:
         insmod("x86-64-accton-as7926-40xfb-%s.ko" % m)
 
